@@ -10,6 +10,7 @@ from pathlib import Path
 DEFAULT_PATTERNS = [
     "cameo-mcp-goose-python-standalone-*",
     "cameo-mcp-bridge-cameo-plugin-*.zip",
+    "UPSTREAM_SOURCE.txt",
 ]
 
 

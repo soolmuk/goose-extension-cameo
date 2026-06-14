@@ -20,7 +20,8 @@ done < <(find "$RELEASE_DIR" -maxdepth 1 -type f \( \
   -name 'cameo-mcp-goose-python-standalone-*.zip' -o \
   -name 'cameo-mcp-goose-python-standalone-*.tar.gz' -o \
   -name 'cameo-mcp-bridge-cameo-plugin-*.zip' -o \
-  -name 'checksums.txt' \
+  -name 'checksums.txt' -o \
+  -name 'UPSTREAM_SOURCE.txt' \
 \) -print0 | sort -z)
 
 if [ "${#artifacts[@]}" -eq 0 ]; then
@@ -32,8 +33,14 @@ if [ ! -f "$NOTES_FILE" ]; then
   exit 1
 fi
 
+release_flags=()
+if [ "${PRERELEASE:-false}" = "true" ]; then
+  release_flags+=(--prerelease)
+fi
+
 gh release create "$TAG" \
   "${artifacts[@]}" \
   --repo "$REPO" \
   --title "Offline Goose Standalone Cameo MCP Bridge ${TAG}" \
-  --notes-file "$NOTES_FILE"
+  --notes-file "$NOTES_FILE" \
+  "${release_flags[@]}"

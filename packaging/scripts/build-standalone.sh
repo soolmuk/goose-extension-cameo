@@ -26,11 +26,21 @@ fi
 "$PYTHON_BIN" -m venv .build-venv
 # shellcheck disable=SC1091
 . .build-venv/bin/activate
-python -m pip install --upgrade pip
-if [ -n "$MCP_SERVER_SOURCE" ]; then
-  python -m pip install "$MCP_SERVER_SOURCE"
-else
-  python -m pip install "$MCP_PACKAGE_SPEC"
+
+PYTHON_RUN=(python)
+if [ "$(uname -s)" = "Darwin" ]; then
+  case "${PYINSTALLER_TARGET_ARCH:-}" in
+    x86_64|arm64)
+      PYTHON_RUN=(arch "-${PYINSTALLER_TARGET_ARCH}" python)
+      ;;
+  esac
 fi
-python -m pip install pyinstaller PyYAML
-python -m PyInstaller ./packaging/pyinstaller/cameo-mcp-bridge.spec --noconfirm
+
+"${PYTHON_RUN[@]}" -m pip install --upgrade pip
+if [ -n "$MCP_SERVER_SOURCE" ]; then
+  "${PYTHON_RUN[@]}" -m pip install "$MCP_SERVER_SOURCE"
+else
+  "${PYTHON_RUN[@]}" -m pip install "$MCP_PACKAGE_SPEC"
+fi
+"${PYTHON_RUN[@]}" -m pip install pyinstaller PyYAML
+"${PYTHON_RUN[@]}" -m PyInstaller ./packaging/pyinstaller/cameo-mcp-bridge.spec --noconfirm
