@@ -8,6 +8,10 @@ from PyInstaller.utils.hooks import collect_submodules
 
 block_cipher = None
 REPO_ROOT = Path(SPECPATH).parents[1]
+MCP_SERVER_SOURCE = os.environ.get("MCP_SERVER_SOURCE")
+PATHEX = [str(REPO_ROOT / "packaging" / "standalone")]
+if MCP_SERVER_SOURCE:
+    PATHEX.insert(0, str(Path(MCP_SERVER_SOURCE).resolve()))
 
 hiddenimports = [
     "mcp.server.fastmcp",
@@ -30,7 +34,7 @@ hiddenimports += collect_submodules("yaml")
 
 a = Analysis(
     [str(REPO_ROOT / "packaging" / "standalone" / "cameo_mcp_bridge_standalone.py")],
-    pathex=[str(REPO_ROOT / "mcp-server"), str(REPO_ROOT / "packaging" / "standalone")],
+    pathex=PATHEX,
     binaries=[],
     datas=[],
     hiddenimports=hiddenimports,

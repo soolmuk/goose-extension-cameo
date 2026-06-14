@@ -2,18 +2,39 @@
 
 Release build machines may use the internet to download build dependencies. Target install machines must not.
 
+This repository contains only standalone packaging/release tooling. It does **not** vendor the MCP server source or the Java Cameo plugin source. Provide compatible private/prebuilt inputs during the release build.
+
 ## Python Standalone Bundle
 
-Build separately on each target OS/architecture:
+Build separately on each target OS/architecture. Provide one of the following inputs:
+
+- `MCP_SERVER_SOURCE=/path/to/compatible/mcp-server` for a local Python package/source directory.
+- `MCP_PACKAGE_SPEC='cameo-mcp-server @ file:///path/to/cameo_mcp_server-2.3.5-py3-none-any.whl'` for a prebuilt local wheel/package spec.
+
+macOS/Linux example:
 
 ```bash
-packaging/scripts/build-standalone.sh
+MCP_SERVER_SOURCE=/path/to/compatible/mcp-server \
+  packaging/scripts/build-standalone.sh
 python3 packaging/scripts/assemble-standalone-bundle.py --os linux --arch x64 --archive tar.gz
 ```
 
-Windows:
+macOS target-architecture examples:
+
+```bash
+PYINSTALLER_TARGET_ARCH=arm64 MCP_SERVER_SOURCE=/path/to/compatible/mcp-server \
+  packaging/scripts/build-standalone.sh
+python3 packaging/scripts/assemble-standalone-bundle.py --os macos --arch arm64 --archive tar.gz
+
+PYINSTALLER_TARGET_ARCH=x86_64 MCP_SERVER_SOURCE=/path/to/compatible/mcp-server \
+  packaging/scripts/build-standalone.sh
+python3 packaging/scripts/assemble-standalone-bundle.py --os macos --arch x64 --archive tar.gz
+```
+
+Windows example:
 
 ```powershell
+$env:MCP_SERVER_SOURCE = 'C:\path\to\compatible\mcp-server'
 packaging\scripts\build-standalone.ps1
 python packaging\scripts\assemble-standalone-bundle.py --os windows --arch x64 --archive zip
 ```
@@ -25,13 +46,11 @@ Expected PyInstaller output:
 
 ## Cameo Plugin Zip
 
-Build with a Cameo install available to Gradle:
+This repository does not vendor Java plugin source. Build or obtain the precompiled Cameo plugin artifact outside this repository, then point `PLUGIN_DIST` at the copy-ready `com.claude.cameo.bridge` folder:
 
 ```bash
-cd plugin
-./gradlew assemblePlugin -PcameoHome=/path/to/CatiaMagic
-cd ..
-packaging/scripts/package-cameo-plugin.sh
+PLUGIN_DIST=/path/to/com.claude.cameo.bridge \
+  packaging/scripts/package-cameo-plugin.sh
 ```
 
 The zip must contain:
@@ -48,14 +67,25 @@ python3 packaging/scripts/generate-checksums.py release
 
 ## Validation
 
-Run unit tests:
+Run packaging helper checks:
 
 ```bash
-cd mcp-server
-python3 -m pytest
+python3 -m py_compile \
+  packaging/standalone/cameo_mcp_bridge_standalone.py \
+  packaging/standalone/cameo_mcp_standalone/goose_config.py \
+  packaging/scripts/assemble-standalone-bundle.py \
+  packaging/scripts/generate-checksums.py
+
+bash -n \
+  packaging/scripts/build-standalone.sh \
+  packaging/scripts/package-cameo-plugin.sh \
+  packaging/scripts/smoke-test-standalone.sh \
+  packaging/scripts/create-github-release.sh \
+  packaging/templates/install/install-goose.sh \
+  packaging/templates/install/uninstall-goose.sh
 ```
 
-Run packaged smoke tests on every target OS/arch:
+Run packaged smoke tests on every target OS/arch after real artifacts are built:
 
 ```bash
 packaging/scripts/smoke-test-standalone.sh /path/to/cameo-mcp-bridge

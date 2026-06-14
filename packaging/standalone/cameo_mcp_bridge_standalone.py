@@ -28,7 +28,6 @@ def _add_development_paths() -> None:
 
 _add_development_paths()
 
-from cameo_mcp.server import main as run_mcp_server  # noqa: E402
 from cameo_mcp_standalone.goose_config import (  # noqa: E402
     install_goose_extension,
     print_goose_config_snippet,
@@ -62,6 +61,15 @@ def main() -> None:
     if args.print_goose_config:
         print_goose_config_snippet(port=args.port, timeout=args.timeout)
         return
+
+    try:
+        from cameo_mcp.server import main as run_mcp_server
+    except ModuleNotFoundError as exc:
+        raise SystemExit(
+            "Unable to import cameo_mcp.server. Build the standalone bundle with "
+            "a compatible MCP server package installed or pass MCP_SERVER_SOURCE "
+            "to packaging/scripts/build-standalone.*."
+        ) from exc
 
     run_mcp_server()
 
