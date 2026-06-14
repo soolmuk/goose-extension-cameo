@@ -1,0 +1,15 @@
+extensions:
+  cameo-bridge:
+    bundled: false
+    display_name: "Cameo MCP Bridge"
+    enabled: true
+    name: "cameo-bridge"
+    timeout: 300
+    type: "stdio"
+    available_tools: []
+    cmd: "/absolute/path/to/cameo-mcp-bridge/bin/cameo-mcp-bridge"
+    args: []
+    description: "Offline standalone Cameo MCP Bridge for CATIA Magic / Cameo Systems Modeler"
+    env_keys: []
+    envs:
+      CAMEO_BRIDGE_PORT: "18740"

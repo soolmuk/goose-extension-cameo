@@ -1,0 +1,16 @@
+version: "2.3.5"
+standalone_artifacts:
+  - os: windows
+    arch: x64
+    archive: zip
+  - os: macos
+    arch: arm64
+    archive: tar.gz
+  - os: macos
+    arch: x64
+    archive: tar.gz
+  - os: linux
+    arch: x64
+    archive: tar.gz
+java_plugin_artifact:
+  archive: zip
