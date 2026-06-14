@@ -29,3 +29,14 @@ This repository only contains standalone packaging/release tooling. To build rea
 - `PLUGIN_DIST=/path/to/prebuilt/com.claude.cameo.bridge` for the separate Cameo plugin zip
 
 No upstream Cameo MCP source or plugin source is vendored in this repository.
+
+
+## Build from upstream without vendoring
+
+Use the upstream repository as a build-time input without committing its source here:
+
+```bash
+TARGET_OS=macos TARGET_ARCH=arm64 ARCHIVE=tar.gz   packaging/scripts/build-release-from-upstream.sh
+```
+
+The script clones `https://github.com/ajhcs/cameo-mcp-bridge.git` into `.external/cameo-mcp-bridge` and uses it only for local release assembly. `.external/` is ignored by git.

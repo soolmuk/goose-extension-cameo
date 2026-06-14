@@ -1,0 +1,7 @@
+repository: "https://github.com/ajhcs/cameo-mcp-bridge.git"
+ref: "master"
+source_dir: ".external/cameo-mcp-bridge"
+license_file: "LICENSE"
+python_server_dir: "mcp-server"
+java_plugin_dir: "plugin"
+java_plugin_dist: "plugin/build/plugin-dist/com.claude.cameo.bridge"

@@ -61,6 +61,11 @@ def main() -> None:
     parser.add_argument("--os", default=platform.system().lower().replace("darwin", "macos"))
     parser.add_argument("--arch", default=platform.machine().lower().replace("amd64", "x64").replace("x86_64", "x64"))
     parser.add_argument("--archive", choices=["zip", "tar.gz"], default=None)
+    parser.add_argument(
+        "--upstream-source-dir",
+        default=os.environ.get("UPSTREAM_SOURCE_DIR") or os.environ.get("UPSTREAM_DIR"),
+        help="Optional build-time upstream checkout whose LICENSE/source metadata should be included",
+    )
     args = parser.parse_args()
 
     dist = Path(args.dist).resolve()
@@ -113,22 +118,44 @@ def main() -> None:
             else:
                 shutil.copy2(child, target)
 
-    # PyInstaller resolves the runtime directory relative to the executable.
-    # Keep the documented root-level runtime/ directory and add the relative
-    # bin/runtime pointer/copy needed by the bootloader after moving the
-    # executable under bin/.
-    bin_runtime = bin_dir / "runtime"
+    # PyInstaller resolves its contents directory relative to the executable.
+    # Keep the documented root-level runtime/ directory, and mirror/symlink the
+    # actual PyInstaller support directories back under bin/ after moving the
+    # executable there. Current PyInstaller defaults to _internal; older/custom
+    # specs may use runtime.
+    support_dirs = [child for child in runtime_dir.iterdir() if child.is_dir()]
     if args.os == "windows":
-        if not bin_runtime.exists():
-            shutil.copytree(runtime_dir, bin_runtime, dirs_exist_ok=True)
+        for support_dir in support_dirs:
+            bin_support = bin_dir / support_dir.name
+            if not bin_support.exists():
+                shutil.copytree(support_dir, bin_support, dirs_exist_ok=True)
     else:
-        if not bin_runtime.exists():
-            bin_runtime.symlink_to(Path("..") / "runtime", target_is_directory=True)
+        for support_dir in support_dirs:
+            bin_support = bin_dir / support_dir.name
+            if not bin_support.exists():
+                bin_support.symlink_to(Path("..") / "runtime" / support_dir.name, target_is_directory=True)
 
     copytree_contents(Path("packaging/templates/install"), bundle_root / "install")
     copytree_contents(Path("packaging/templates/goose"), bundle_root / "goose")
     shutil.copy2("packaging/templates/README-OFFLINE.md", bundle_root / "README-OFFLINE.md")
     (bundle_root / "VERSION").write_text(args.version + "\n", encoding="utf-8")
+
+    if args.upstream_source_dir:
+        upstream_dir = Path(args.upstream_source_dir).resolve()
+        if upstream_dir.exists():
+            third_party_dir = bundle_root / "THIRD-PARTY"
+            third_party_dir.mkdir(parents=True, exist_ok=True)
+            upstream_license = upstream_dir / "LICENSE"
+            if upstream_license.exists():
+                shutil.copy2(upstream_license, third_party_dir / "cameo-mcp-bridge-LICENSE")
+            metadata = []
+            metadata.append("Build-time upstream source (not vendored in packaging repository)\n")
+            metadata.append(f"Repository: https://github.com/ajhcs/cameo-mcp-bridge.git\n")
+            metadata.append(f"Local source dir: {upstream_dir}\n")
+            head_file = upstream_dir / ".git" / "HEAD"
+            if head_file.exists():
+                metadata.append(f"Git HEAD: {head_file.read_text(encoding='utf-8').strip()}\n")
+            (third_party_dir / "cameo-mcp-bridge-SOURCE.txt").write_text("".join(metadata), encoding="utf-8")
 
     executable_checksum = sha256(bin_dir / exe_name)
     (bundle_root / "checksums.txt").write_text(

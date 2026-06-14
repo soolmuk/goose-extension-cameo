@@ -17,6 +17,12 @@ mkdir -p "$OUT"
 cp -R "$PLUGIN_DIST" "$OUT/com.claude.cameo.bridge"
 cp "packaging/templates/README-INSTALL-CAMEO-PLUGIN.md" "$OUT/com.claude.cameo.bridge/README-INSTALL-CAMEO-PLUGIN.md"
 
+UPSTREAM_SOURCE_DIR="${UPSTREAM_SOURCE_DIR:-${UPSTREAM_DIR:-}}"
+if [ -n "$UPSTREAM_SOURCE_DIR" ] && [ -f "$UPSTREAM_SOURCE_DIR/LICENSE" ]; then
+  mkdir -p "$OUT/com.claude.cameo.bridge/THIRD-PARTY"
+  cp "$UPSTREAM_SOURCE_DIR/LICENSE" "$OUT/com.claude.cameo.bridge/THIRD-PARTY/cameo-mcp-bridge-LICENSE"
+fi
+
 if [ ! -f "$OUT/com.claude.cameo.bridge/plugin.xml" ]; then
   echo "Packaged plugin is missing plugin.xml" >&2
   exit 1

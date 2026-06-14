@@ -17,6 +17,10 @@ release/work/
 release/cameo-mcp-goose-python-standalone-*
 release/cameo-mcp-bridge-cameo-plugin-*.zip
 release/checksums.txt
+release/UPSTREAM_SOURCE.txt
+
+# External build inputs (not vendored)
+.external/
 
 # Local scratch
 tmp/

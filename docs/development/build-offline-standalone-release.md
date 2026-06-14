@@ -4,6 +4,36 @@ Release build machines may use the internet to download build dependencies. Targ
 
 This repository contains only standalone packaging/release tooling. It does **not** vendor the MCP server source or the Java Cameo plugin source. Provide compatible private/prebuilt inputs during the release build.
 
+## One-command Build From Upstream Source
+
+To use the upstream repository as a build-time input without vendoring it here:
+
+```bash
+TARGET_OS=macos TARGET_ARCH=arm64 ARCHIVE=tar.gz \
+  packaging/scripts/build-release-from-upstream.sh
+```
+
+This clones or updates `https://github.com/ajhcs/cameo-mcp-bridge.git` under `.external/cameo-mcp-bridge`, which is ignored by git. The fetched source is used only on the release build machine.
+
+Override the upstream ref when needed:
+
+```bash
+UPSTREAM_REF=<commit-or-tag> \
+TARGET_OS=macos TARGET_ARCH=arm64 ARCHIVE=tar.gz \
+  packaging/scripts/build-release-from-upstream.sh
+```
+
+To also build and package the Java Cameo plugin, provide a local Cameo install:
+
+```bash
+BUILD_PLUGIN=true \
+CAMEO_HOME=/path/to/CatiaMagic \
+JDK17_HOME=/path/to/jdk-17 \
+TARGET_OS=macos TARGET_ARCH=arm64 ARCHIVE=tar.gz \
+  packaging/scripts/build-release-from-upstream.sh
+```
+
+
 ## Python Standalone Bundle
 
 Build separately on each target OS/architecture. Provide one of the following inputs:
